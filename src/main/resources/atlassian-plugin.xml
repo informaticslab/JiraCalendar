@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<atlassian-plugin key="${project.groupId}.servlet" name="IIU ICS Calendar Export" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}" />
+        <application-version min="3.11"
+                             max="4.1"/>
+    </plugin-info>
+
+    <!-- The mypluginstrings. properties file provides strings for use
+         in this file.  For strings in your templates, see the CommandTwo
+         sample. -->
+    <resource type="i18n" name="i18n" location="exportdate"/>
+    <!-- add our web resources -->
+    <web-resource key="exportdate-resources" name="Export Date Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="exportdate.css" location="/css/exportdate.css"/>
+        <!--<resource type="download" name="exportdate.js" location="/js/exportdate.js"/>-->
+        <!--<resource type="download" name="images/" location="/images"/>-->
+        <context>jira.view.issue</context>
+    </web-resource>
+
+
+
+
+
+    <!--this is a  test servlet-->
+    <servlet name="Export Date Servlet" key="exportdate" class="org.phiresearchlab.jira.servlet.ExportDateServlet">
+        <description>Export Room Reservation Date</description>
+        <url-pattern>/exportdate</url-pattern>
+    </servlet>
+    <web-item name="Export Dates" i18n-name-key="export-dates.name" key="export-dates" section="operations-top-level" weight="1000">
+        <description key="export-dates.description">Export Reservation Date</description>
+        <label key="export-dates.label" />
+        <link linkId="export-dates-link">/plugins/servlet/exportdate?issuekey=$issue.key</link>
+    </web-item>
+
+</atlassian-plugin>
