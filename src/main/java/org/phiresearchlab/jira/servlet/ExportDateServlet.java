@@ -133,17 +133,35 @@ public class ExportDateServlet extends HttpServlet {
                     Uid uid = new Uid(uidval);
                     roomReserveEvent.getProperties().add(uid);
                     // add location
-                    roomReserveEvent.getProperties().add(new Location("Century Center Building 2500 Room:2029"));
+                    roomReserveEvent.getProperties().add(new Location("2500 Century Center, Room 2029"));
                     // add description
-                    roomReserveEvent.getProperties().add(new Description(currentIssue.getDescription()));
-
+                    String issueDesc = "Your lab reservation is confirmed. You can review your request here:\n" + issueUrl;
+                    if (currentIssue.getDescription() != null) {
+                        issueDesc = currentIssue.getDescription().concat("\n\n").concat(issueDesc);
+                    }
+                    try {
+                        roomReserveEvent.getProperties().add(new Description(issueDesc));
+                    }
+                    catch (Exception e) {
+                        // outputStream.write("descp ".concat(e.toString()).getBytes());
+                    }
                     // add url
                     roomReserveEvent.getProperties().add(new Url(new URI(issueUrl)));
+                    // add organizer
+                    try {
+                        Organizer organizer = new Organizer(URI.create("mailto:" + currentIssue.getCreator().getEmailAddress()));
+                        organizer.getParameters().add(new Cn(currentIssue.getCreator().getDisplayName()));
+                        roomReserveEvent.getProperties().add(organizer);
+                    } catch (Exception e) {
+                        // do nothing
+                        log.debug("organizer ".concat(e.toString()));
+                        //outputStream.write("organizer ".concat(e.toString()).getBytes());
+                    }
                     // add attendees..
                     Attendee att1 = new Attendee(URI.create(currentIssue.getReporter().getEmailAddress()));
                     //Attendee att1 = new Attendee(new URI("mailto",currentIssue.getReporter().getEmailAddress(),null));
                     att1.getParameters().add(Role.REQ_PARTICIPANT);
-                    att1.getParameters().add(new Cn("Main POC: "+ currentIssue.getReporter().getDisplayName() ));
+                    att1.getParameters().add(new Cn(currentIssue.getReporter().getDisplayName() ));
                     try {
                         roomReserveEvent.getProperties().add(att1);
                     } catch (Exception e) {
@@ -168,77 +186,77 @@ public class ExportDateServlet extends HttpServlet {
             }
             //outputStream.write("checkpoint before loop\n".getBytes());
             for (int i = 0; i < reserveDateCount; i ++) {  // for each set of date, create calendar item
-                    reserveDate = null;
-                    startTime= null;
-                    endTime=null;
-                    try {
-                        idxStr =  new Integer(i+1).toString();
-                        if (customFieldManager.getCustomFieldObjectByName("Start date and time (day " + idxStr + ")") != null) {
-                            reserveDate = customFieldManager.getCustomFieldObjectByName("Start date and time (day " + idxStr + ")");
-                            try {
-                                sdata = (Timestamp) reserveDate.getValue(currentIssue);
-                                startTime = new DateTime(sdata.getTime());
-                            }
-                            catch(Exception e) {
-                                log.debug("Sdata was null");
-                                //outputStream.write("sdate ".concat(e.toString()).getBytes());
-                            }
+                reserveDate = null;
+                startTime= null;
+                endTime=null;
+                try {
+                    idxStr =  new Integer(i+1).toString();
+                    if (customFieldManager.getCustomFieldObjectByName("Start date and time (day " + idxStr + ")") != null) {
+                        reserveDate = customFieldManager.getCustomFieldObjectByName("Start date and time (day " + idxStr + ")");
+                        try {
+                            sdata = (Timestamp) reserveDate.getValue(currentIssue);
+                            startTime = new DateTime(sdata.getTime());
                         }
-                        if (customFieldManager.getCustomFieldObjectByName("End date and time (day " + idxStr + ")") != null) {
-                            reserveDate = customFieldManager.getCustomFieldObjectByName("End date and time (day " + idxStr + ")");
-                            try {
-                                edata = (Timestamp) reserveDate.getValue(currentIssue);
-                                endTime = new DateTime(edata.getTime());
-                            }
-                            catch (Exception e) {
-                                log.debug("Edata was null");
-                                //outputStream.write("edate ".concat(e.toString().concat("\n").getBytes());
-                            }
+                        catch(Exception e) {
+                            log.debug("Sdata was null");
+                            //outputStream.write("sdate ".concat(e.toString()).getBytes());
                         }
-                        roomReserveEvent = createEvent(startTime,endTime,issueKey,summary);
-                        if (roomReserveEvent != null) {
-                            String uidval = currentIssue.getKey() + "-" + idxStr + "@IIU";
-                            Uid uid = new Uid(uidval);
-                            roomReserveEvent.getProperties().add(uid);
-                            // add location
-                            roomReserveEvent.getProperties().add(new Location("Century Center Building 2500 Room:2029"));
-                            // add description
-                            String issueDesc = "This is to confirm your lab reservation request.  You can review your request at:\n" + issueUrl;
-                                if (currentIssue.getDescription() != null) {
-                                    issueDesc = currentIssue.getDescription().concat("\n\n").concat(issueDesc);
-                                }
-                            try {
-                                roomReserveEvent.getProperties().add(new Description(issueDesc));
-                            }
-                            catch (Exception e) {
-                               // outputStream.write("descp ".concat(e.toString()).getBytes());
-                            }
+                    }
+                    if (customFieldManager.getCustomFieldObjectByName("End date and time (day " + idxStr + ")") != null) {
+                        reserveDate = customFieldManager.getCustomFieldObjectByName("End date and time (day " + idxStr + ")");
+                        try {
+                            edata = (Timestamp) reserveDate.getValue(currentIssue);
+                            endTime = new DateTime(edata.getTime());
+                        }
+                        catch (Exception e) {
+                            log.debug("Edata was null");
+                            //outputStream.write("edate ".concat(e.toString().concat("\n").getBytes());
+                        }
+                    }
+                    roomReserveEvent = createEvent(startTime,endTime,issueKey,summary);
+                    if (roomReserveEvent != null) {
+                        String uidval = currentIssue.getKey() + "-" + idxStr + "@IIU";
+                        Uid uid = new Uid(uidval);
+                        roomReserveEvent.getProperties().add(uid);
+                        // add location
+                        roomReserveEvent.getProperties().add(new Location("2500 Century Center, Room 2029"));
+                        // add description
+                        String issueDesc = "Your lab reservation is confirmed. You can review your request here:\n" + issueUrl;
+                        if (currentIssue.getDescription() != null) {
+                            issueDesc = currentIssue.getDescription().concat("\n\n").concat(issueDesc);
+                        }
+                        try {
+                            roomReserveEvent.getProperties().add(new Description(issueDesc));
+                        }
+                        catch (Exception e) {
+                            // outputStream.write("descp ".concat(e.toString()).getBytes());
+                        }
 
-                            // add url
-                            roomReserveEvent.getProperties().add(new Url(new URI(issueUrl)));
-                            // add organizer
-                            try {
-                                Organizer organizer = new Organizer(URI.create("mailto:" + currentIssue.getCreator().getEmailAddress()));
-                                organizer.getParameters().add(new Cn("Organizer POC: " + currentIssue.getCreator().getDisplayName()));
-                                    roomReserveEvent.getProperties().add(organizer);
-                                } catch (Exception e) {
-                                    // do nothing
-                                    log.debug("organizer ".concat(e.toString()));
-                                    //outputStream.write("organizer ".concat(e.toString()).getBytes());
-                            }
+                        // add url
+                        roomReserveEvent.getProperties().add(new Url(new URI(issueUrl)));
+                        // add organizer
+                        try {
+                            Organizer organizer = new Organizer(URI.create("mailto:" + currentIssue.getCreator().getEmailAddress()));
+                            organizer.getParameters().add(new Cn(currentIssue.getCreator().getDisplayName()));
+                            roomReserveEvent.getProperties().add(organizer);
+                        } catch (Exception e) {
+                            // do nothing
+                            log.debug("organizer ".concat(e.toString()));
+                            //outputStream.write("organizer ".concat(e.toString()).getBytes());
+                        }
 
-                            // add attendees..
-                            Attendee att1 = new Attendee(URI.create(currentIssue.getReporter().getEmailAddress()));
-                            //Attendee att1 = new Attendee(new URI("mailto",currentIssue.getReporter().getEmailAddress(),null));
-                            att1.getParameters().add(Role.REQ_PARTICIPANT);
-                            att1.getParameters().add(new Cn("Main POC: "+ currentIssue.getReporter().getDisplayName() ));
-                            try {
-                                roomReserveEvent.getProperties().add(att1);
-                            } catch (Exception e) {
-                                //outputStream.write(e.toString().getBytes());
-                            }
-                            // add a default attendee
-                                //Attendee att2 = new Attendee(URI.create(currentIssue.getReporter().getEmailAddress()));
+                        // add attendees..
+                        Attendee att1 = new Attendee(URI.create(currentIssue.getReporter().getEmailAddress()));
+                        //Attendee att1 = new Attendee(new URI("mailto",currentIssue.getReporter().getEmailAddress(),null));
+                        att1.getParameters().add(Role.REQ_PARTICIPANT);
+                        att1.getParameters().add(new Cn(currentIssue.getReporter().getDisplayName() ));
+                        try {
+                            roomReserveEvent.getProperties().add(att1);
+                        } catch (Exception e) {
+                            //outputStream.write(e.toString().getBytes());
+                        }
+                        // add a default attendee
+                        //Attendee att2 = new Attendee(URI.create(currentIssue.getReporter().getEmailAddress()));
 //                            //Attendee att2 = new Attendee(new URI("mailto",currentIssue.getReporter().getEmailAddress(),null));
 //                            att2.getParameters().add(Role.REQ_PARTICIPANT);
 //                            att2.getParameters().add(new Cn("Secondary POC: "+ currentIssue.getReporter().getDisplayName() ));
@@ -247,20 +265,20 @@ public class ExportDateServlet extends HttpServlet {
 //                            } catch (Exception e) {
 //                                //outputStream.write(e.toString().getBytes());
 //                            }
-                            cal.getComponents().add(roomReserveEvent);
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        log.debug(e.toString());
-                        //outputStream.write("loop  ".concat(e.toString()).getBytes());
-
+                        cal.getComponents().add(roomReserveEvent);
                     }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.debug(e.toString());
+                    //outputStream.write("loop  ".concat(e.toString()).getBytes());
+
+                }
 
 
             }
             // compelted adding events
-           CalendarOutputter out = new CalendarOutputter();
+            CalendarOutputter out = new CalendarOutputter();
             out.setValidating(false);
             try {
                 out.output(cal,bout);  //output calendar to byte stream
@@ -289,7 +307,7 @@ public class ExportDateServlet extends HttpServlet {
 
         MutableIssue currentIssue = null;
         try {
-        MutableIssue issue = issueManager.getIssueObject(issueKey);
+            MutableIssue issue = issueManager.getIssueObject(issueKey);
         }
         catch (Exception e) {
             e.printStackTrace();
